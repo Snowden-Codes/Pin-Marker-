@@ -1,31 +1,48 @@
+<!DOCTYPE html>
 <html>
   <head>
     <title>Default Place Picker</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Default Place Picker">
 
-    <!-- Corrected Token -->
-    <script src="https://apis.mappls.com/advancedmaps/api/9c3b6a8b5c6c0ac6a5051cf25ba004bc/map_sdk?layer=vector&v=3.0&callback=initMap1"></script>
-    <script src="https://apis.mappls.com/advancedmaps/api/9c3b6a8b5c6c0ac6a5051cf25ba004bc/map_sdk_plugins?v=3.0"></script>
+    <!-- Include Mappls SDK with your actual Token -->
+    <script src="https://apis.mappls.com/advancedmaps/api/9c3b6a8b5c6c0ac6a5051cf25ba004bc/map_sdk?layer=vector&v=3.0&callback=initMap1" async defer></script>
+    <script src="https://apis.mappls.com/advancedmaps/api/9c3b6a8b5c6c0ac6a5051cf25ba004bc/map_sdk_plugins?v=3.0" async defer></script>
+
     <style>
-      body { margin: 0; }
+      body { margin: 0; font-family: Arial, sans-serif; }
       #map { width: 100%; height: 90vh; margin: 0; padding: 0; }
-      #form { padding: 10px; text-align: center; }
+      #form {
+        padding: 10px;
+        text-align: center;
+        background-color: #f2f2f2;
+      }
+      #form input {
+        padding: 5px;
+        margin: 5px;
+        width: 150px;
+      }
+      #form button {
+        padding: 5px 10px;
+        margin: 5px;
+      }
     </style>
   </head>
   <body>
     <div id="form">
       <label for="latitude">Latitude: </label>
-      <input type="number" id="latitude" placeholder="Enter Latitude" step="any">
+      <input type="number" id="latitude" placeholder="Enter Latitude" step="any" required>
       <label for="longitude">Longitude: </label>
-      <input type="number" id="longitude" placeholder="Enter Longitude" step="any">
-      <button onclick="pinLocation()">Pin Location</button>
+      <input type="number" id="longitude" placeholder="Enter Longitude" step="any" required>
+      <button id="pinButton">Pin Location</button>
     </div>
     <div id="map"></div>
+
     <script>
       var map;
-      var currentMarker = null; // Store the current marker reference
+      var currentMarker = null; // Reference to the current marker
 
+      // Initialize the map
       function initMap1() {
         map = new mappls.Map('map', {
           center: [28.62, 77.09], // Default center
@@ -33,14 +50,23 @@
         });
       }
 
+      // Function to pin the location
       function pinLocation() {
         // Get user input
-        var lat = parseFloat(document.getElementById('latitude').value);
-        var lng = parseFloat(document.getElementById('longitude').value);
+        var latInput = document.getElementById('latitude').value.trim();
+        var lngInput = document.getElementById('longitude').value.trim();
 
+        var lat = parseFloat(latInput);
+        var lng = parseFloat(lngInput);
+
+        // Validate input
         if (!isNaN(lat) && !isNaN(lng)) {
-          // Center map to the user-specified coordinates
-          map.setCenter([lat, lng]);
+          // Center the map and zoom in
+          map.flyTo({
+            center: [lng, lat], // Longitude first
+            zoom: 15,           // Set zoom level
+            speed: 1.5          // Speed of animation
+          });
 
           // Remove the previous marker if it exists
           if (currentMarker) {
@@ -50,14 +76,30 @@
           // Add a new marker at the specified location
           currentMarker = new mappls.Marker({
             position: { lat: lat, lng: lng },
-            map: map
+            map: map,
+            title: "Pinned Location"
           });
 
-          alert(`Pinned location: Latitude ${lat}, Longitude ${lng}`);
+          // Optionally, bind a popup to the marker
+          currentMarker.bindPopup(`<b>Pinned Location</b><br>Latitude: ${lat}<br>Longitude: ${lng}`).openPopup();
         } else {
           alert("Please enter valid latitude and longitude values.");
         }
       }
+
+      // Event listener for the button click
+      document.getElementById('pinButton').addEventListener('click', function(e) {
+        e.preventDefault(); // Prevent default form submission behavior
+        pinLocation();
+      });
+
+      // Event listener for the Enter key on input fields
+      document.getElementById('form').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault(); // Prevent form submission
+          pinLocation();
+        }
+      });
     </script>
   </body>
 </html>
